@@ -290,6 +290,60 @@ const ManageBookings = () => {
     },
   });
 
+  const resetCreateForm = () => {
+    setCreateForm(initialCreateForm);
+    setCreateTouchedTotal(false);
+  };
+
+  const createBookingMutation = useMutation({
+    mutationFn: async (payload: Record<string, unknown>) => {
+      return apiPost("/public/bookings", payload);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Booking created",
+        description: "Reservation recorded successfully.",
+      });
+      resetCreateForm();
+      setShowCreateBooking(false);
+      queryClient.invalidateQueries({ queryKey: ["admin-bookings"] });
+    },
+    onError: (error: unknown) => {
+      const message =
+        error instanceof ApiError
+          ? error.message
+          : error instanceof Error
+          ? error.message
+          : "Unable to create booking.";
+      toast({
+        title: "Creation failed",
+        description: message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const allowedOutletOptions = useMemo(
+    () => (Array.isArray(outletsData?.outlets) ? outletsData.outlets : []),
+    [outletsData],
+  );
+
+  useEffect(() => {
+    if (!showCreateBooking) return;
+    setCreateForm((prev) => {
+      if (prev.outlet_id && prev.outlet_id.length > 0) return prev;
+      if (selectedOutlet && selectedOutlet !== "all") {
+        return { ...prev, outlet_id: selectedOutlet };
+      }
+      const fallbackOutlet = allowedOutletOptions[0]?.location_key;
+      return fallbackOutlet ? { ...prev, outlet_id: fallbackOutlet } : prev;
+    });
+  }, [showCreateBooking, selectedOutlet, allowedOutletOptions]);
+
+  const handleCreateInputChange = (field: keyof typeof createForm, value: string) => {
+    setCreateForm((prev) => ({ ...prev, [field]: value }));
+  };
+
   const resetAdjustModal = () => {
     setShowAdjustModal(false);
     setAdjustBooking(null);
@@ -1828,56 +1882,3 @@ const ManageBookings = () => {
 };
 
 export default ManageBookings;
-  const resetCreateForm = () => {
-    setCreateForm(initialCreateForm);
-    setCreateTouchedTotal(false);
-  };
-
-  const createBookingMutation = useMutation({
-    mutationFn: async (payload: Record<string, unknown>) => {
-      return apiPost("/public/bookings", payload);
-    },
-    onSuccess: () => {
-      toast({
-        title: "Booking created",
-        description: "Reservation recorded successfully.",
-      });
-      resetCreateForm();
-      setShowCreateBooking(false);
-      queryClient.invalidateQueries({ queryKey: ["admin-bookings"] });
-    },
-    onError: (error: unknown) => {
-      const message =
-        error instanceof ApiError
-          ? error.message
-          : error instanceof Error
-          ? error.message
-          : "Unable to create booking.";
-      toast({
-        title: "Creation failed",
-        description: message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const allowedOutletOptions = useMemo(
-    () => (Array.isArray(outletsData?.outlets) ? outletsData.outlets : []),
-    [outletsData],
-  );
-
-  useEffect(() => {
-    if (!showCreateBooking) return;
-    setCreateForm((prev) => {
-      if (prev.outlet_id && prev.outlet_id.length > 0) return prev;
-      if (selectedOutlet && selectedOutlet !== "all") {
-        return { ...prev, outlet_id: selectedOutlet };
-      }
-      const fallbackOutlet = allowedOutletOptions[0]?.location_key;
-      return fallbackOutlet ? { ...prev, outlet_id: fallbackOutlet } : prev;
-    });
-  }, [showCreateBooking, selectedOutlet, allowedOutletOptions]);
-
-  const handleCreateInputChange = (field: keyof typeof createForm, value: string) => {
-    setCreateForm((prev) => ({ ...prev, [field]: value }));
-  };
