@@ -3,7 +3,13 @@ import { useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -113,12 +119,31 @@ type RoomOption = {
 };
 
 const DOCUMENT_TYPES = [
-  { value: "Aadhar Card", label: "Aadhar Card", placeholder: "Enter Aadhar number" },
-  { value: "Driver's Licence", label: "Driver's Licence", placeholder: "Enter licence number" },
-  { value: "Passport", label: "Passport", placeholder: "Enter passport number" },
-  { value: "Voter ID", label: "Voter ID", placeholder: "Enter voter ID number" },
-  { value: "PAN Card", label: "PAN Card", placeholder: "Enter PAN number" },
-  { value: "Other", label: "Other Document", placeholder: "Enter document number" },
+  {
+    value: "Aadhar Card",
+    label: "Aadhar Card",
+    placeholder: "Enter Aadhar number",
+  },
+  {
+    value: "Driver's Licence",
+    label: "Driver's Licence",
+    placeholder: "Enter licence number",
+  },
+  {
+    value: "Passport",
+    label: "Passport",
+    placeholder: "Enter passport number",
+  },
+  {
+    value: "Voter ID",
+    label: "Voter ID",
+    placeholder: "Enter voter ID number",
+  },
+  {
+    value: "Other",
+    label: "Other Document",
+    placeholder: "Enter document number",
+  },
 ];
 
 const MAX_GUESTS = 6;
@@ -148,16 +173,21 @@ const readFileAsDataUrl = (file: File) =>
   new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error("Failed to read file. Please try again."));
+    reader.onerror = () =>
+      reject(new Error("Failed to read file. Please try again."));
     reader.readAsDataURL(file);
   });
 
 const CheckIn = () => {
   const [booking, setBooking] = useState<BookingRecord | null>(null);
-  const [checkinDetails, setCheckinDetails] = useState<CheckinDetails | null>(null);
+  const [checkinDetails, setCheckinDetails] = useState<CheckinDetails | null>(
+    null,
+  );
   const [lookupLoading, setLookupLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
-  const [lookupContext, setLookupContext] = useState<LookupFormValues | null>(null);
+  const [lookupContext, setLookupContext] = useState<LookupFormValues | null>(
+    null,
+  );
 
   const lookupForm = useForm<LookupFormValues>({
     defaultValues: {
@@ -205,7 +235,10 @@ const CheckIn = () => {
           documentImageType: guest.document_image?.mime_type ?? "",
         })) ?? [];
 
-      const fallbackCount = Math.max(Number(bookingData?.number_of_guests ?? 1), 1);
+      const fallbackCount = Math.max(
+        Number(bookingData?.number_of_guests ?? 1),
+        1,
+      );
       const baseGuests =
         existingGuests.length > 0
           ? existingGuests
@@ -220,9 +253,18 @@ const CheckIn = () => {
 
       replace(baseGuests);
 
-      setValue("expectedArrivalTime", toDateTimeLocalInput(details?.expected_arrival_time ?? ""));
-      setValue("needsSpecialAssistance", Boolean(details?.needs_special_assistance));
-      setValue("specialAssistanceDetails", details?.special_assistance_details ?? "");
+      setValue(
+        "expectedArrivalTime",
+        toDateTimeLocalInput(details?.expected_arrival_time ?? ""),
+      );
+      setValue(
+        "needsSpecialAssistance",
+        Boolean(details?.needs_special_assistance),
+      );
+      setValue(
+        "specialAssistanceDetails",
+        details?.special_assistance_details ?? "",
+      );
       setValue("otherRequests", details?.other_requests ?? "");
     },
     [replace, setValue],
@@ -247,14 +289,12 @@ const CheckIn = () => {
         booking: BookingRecord;
         checkinDetails: CheckinDetails | null;
         availableRooms: RoomOption[];
-      }>(
-        "/admin/bookings/checkin",
-        payload,
-        true,
-      );
+      }>("/public/bookings/checkin", payload);
 
       if (!data?.booking) {
-        throw new Error("Booking not found. Please verify the details and try again.");
+        throw new Error(
+          "Booking not found. Please verify the details and try again.",
+        );
       }
 
       setBooking(data.booking);
@@ -265,15 +305,17 @@ const CheckIn = () => {
       });
       applyDefaults(data.booking, data.checkinDetails ?? null);
 
-      toast.success("Booking located. Please complete the guest check-in form.");
+      toast.success(
+        "Booking located. Please complete the guest check-in form.",
+      );
     } catch (err: unknown) {
       console.error(err);
       const message =
         err instanceof ApiError
           ? err.message
           : err instanceof Error
-          ? err.message
-          : "Unable to locate the booking.";
+            ? err.message
+            : "Unable to locate the booking.";
       toast.error(message);
     } finally {
       setLookupLoading(false);
@@ -293,8 +335,12 @@ const CheckIn = () => {
         shouldValidate: true,
         shouldDirty: true,
       });
-      setValue(`guests.${index}.documentImageName`, file.name, { shouldDirty: true });
-      setValue(`guests.${index}.documentImageType`, file.type, { shouldDirty: true });
+      setValue(`guests.${index}.documentImageName`, file.name, {
+        shouldDirty: true,
+      });
+      setValue(`guests.${index}.documentImageType`, file.type, {
+        shouldDirty: true,
+      });
       toast.success(`Uploaded identity proof for guest ${index + 1}.`);
     } catch (error: any) {
       console.error(error);
@@ -304,7 +350,9 @@ const CheckIn = () => {
 
   const onSubmit = handleSubmit(async (values) => {
     if (!booking || !lookupContext) {
-      toast.error("Please locate a booking before submitting check-in details.");
+      toast.error(
+        "Please locate a booking before submitting check-in details.",
+      );
       return;
     }
 
@@ -312,7 +360,9 @@ const CheckIn = () => {
       (guest) => !guest.documentImageDataUrl,
     );
     if (missingGuestIndex >= 0) {
-      toast.error(`Guest ${missingGuestIndex + 1} is missing an identity document image.`);
+      toast.error(
+        `Guest ${missingGuestIndex + 1} is missing an identity document image.`,
+      );
       return;
     }
 
@@ -345,11 +395,7 @@ const CheckIn = () => {
         booking: BookingRecord;
         checkinDetails: CheckinDetails | null;
         availableRooms: RoomOption[];
-      }>(
-        "/admin/bookings/checkin",
-        payload,
-        true,
-      );
+      }>("/public/bookings/checkin", payload);
 
       if (!data?.booking) {
         throw new Error("Unable to save check-in data. Please try again.");
@@ -366,8 +412,8 @@ const CheckIn = () => {
         err instanceof ApiError
           ? err.message
           : err instanceof Error
-          ? err.message
-          : "Failed to save check-in details.";
+            ? err.message
+            : "Failed to save check-in details.";
       toast.error(message);
     } finally {
       setSubmitLoading(false);
@@ -389,9 +435,12 @@ const CheckIn = () => {
       <div className="container mx-auto px-4 max-w-5xl space-y-8 pb-24">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight">Guest Check-in</h1>
+            <h1 className="text-3xl font-semibold tracking-tight">
+              Guest Check-in
+            </h1>
             <p className="text-muted-foreground">
-              Verify reservations using last name and booking code, capture identity proof, and assign rooms seamlessly.
+              Verify reservations using last name and booking code, capture
+              identity proof, and assign rooms seamlessly.
             </p>
           </div>
           {booking && (
@@ -408,7 +457,8 @@ const CheckIn = () => {
               Locate Booking
             </CardTitle>
             <CardDescription>
-              Enter the booking code and the guest&apos;s last name to retrieve reservation details.
+              Enter the booking code and the guest&apos;s last name to retrieve
+              reservation details.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -439,7 +489,11 @@ const CheckIn = () => {
                 />
               </div>
               <div className="flex items-end">
-                <Button type="submit" className="w-full sm:w-auto" disabled={lookupLoading}>
+                <Button
+                  type="submit"
+                  className="w-full sm:w-auto"
+                  disabled={lookupLoading}
+                >
                   {lookupLoading ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -479,8 +533,12 @@ const CheckIn = () => {
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm">
                   <div>
-                    <p className="text-muted-foreground uppercase text-xs tracking-wide">Primary Guest</p>
-                    <p className="font-semibold text-base">{booking.guest_name}</p>
+                    <p className="text-muted-foreground uppercase text-xs tracking-wide">
+                      Primary Guest
+                    </p>
+                    <p className="font-semibold text-base">
+                      {booking.guest_name}
+                    </p>
                     <div className="text-muted-foreground space-y-1 mt-1">
                       {booking.guest_email && <p>{booking.guest_email}</p>}
                       {booking.guest_phone && <p>{booking.guest_phone}</p>}
@@ -492,22 +550,31 @@ const CheckIn = () => {
                         <CalendarDays className="w-3 h-3" />
                         Check-in
                       </p>
-                      <p className="font-medium">{formatDate(booking.check_in_date)}</p>
+                      <p className="font-medium">
+                        {formatDate(booking.check_in_date)}
+                      </p>
                     </div>
                     <div className="rounded-lg border bg-muted/40 p-3">
                       <p className="flex items-center gap-1 text-xs text-muted-foreground uppercase">
                         <CalendarDays className="w-3 h-3" />
                         Check-out
                       </p>
-                      <p className="font-medium">{formatDate(booking.check_out_date)}</p>
+                      <p className="font-medium">
+                        {formatDate(booking.check_out_date)}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center justify-between text-xs uppercase text-muted-foreground">
                     <span>Booking Code</span>
-                    <span className="font-mono text-sm text-foreground">{booking.booking_code}</span>
+                    <span className="font-mono text-sm text-foreground">
+                      {booking.booking_code}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <Badge variant="secondary" className="flex items-center gap-1">
+                    <Badge
+                      variant="secondary"
+                      className="flex items-center gap-1"
+                    >
                       <ShieldCheck className="w-4 h-4" />
                       {booking.status ?? "PENDING"}
                     </Badge>
@@ -515,11 +582,15 @@ const CheckIn = () => {
                       <Badge
                         className={cn(
                           "flex items-center gap-1",
-                          checkinDetails.status === "COMPLETED" ? "bg-green-600" : "bg-amber-500",
+                          checkinDetails.status === "COMPLETED"
+                            ? "bg-green-600"
+                            : "bg-amber-500",
                         )}
                       >
                         <CheckCircle2 className="w-4 h-4" />
-                        {checkinDetails.status === "COMPLETED" ? "Checked-in" : "Pending"}
+                        {checkinDetails.status === "COMPLETED"
+                          ? "Checked-in"
+                          : "Pending"}
                       </Badge>
                     )}
                   </div>
@@ -533,25 +604,31 @@ const CheckIn = () => {
                     Room Assignment
                   </CardTitle>
                   <CardDescription>
-                    Our front desk will assign rooms once your documents are verified in person.
+                    Our front desk will assign rooms once your documents are
+                    verified in person.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {(() => {
-                    const assignedRooms = Array.isArray(checkinDetails?.assigned_room)
+                    const assignedRooms = Array.isArray(
+                      checkinDetails?.assigned_room,
+                    )
                       ? checkinDetails?.assigned_room
                       : checkinDetails?.assigned_room
-                      ? [checkinDetails.assigned_room]
-                      : [];
+                        ? [checkinDetails.assigned_room]
+                        : [];
                     if (assignedRooms.length === 0) {
                       return (
                         <div className="rounded-lg border border-dashed bg-muted/20 p-4 text-sm text-muted-foreground flex items-start gap-3">
                           <MapPin className="w-4 h-4 mt-0.5 text-primary" />
                           <div>
-                            <p className="font-medium text-foreground">Room to be allotted on arrival</p>
+                            <p className="font-medium text-foreground">
+                              Room to be allotted on arrival
+                            </p>
                             <p>
-                              Our reception team will allocate the best available room once the identity
-                              documents are verified.
+                              Our reception team will allocate the best
+                              available room once the identity documents are
+                              verified.
                             </p>
                           </div>
                         </div>
@@ -567,16 +644,22 @@ const CheckIn = () => {
                           >
                             <div>
                               <p className="text-xs text-muted-foreground uppercase tracking-wide">
-                                Assigned Room {assignedRooms.length > 1 ? index + 1 : ""}
+                                Assigned Room{" "}
+                                {assignedRooms.length > 1 ? index + 1 : ""}
                               </p>
                               <p className="text-xl font-semibold">
                                 {room?.code ?? "TBD"}
                               </p>
                               {room?.type && (
-                                <p className="text-xs text-muted-foreground">{room.type}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {room.type}
+                                </p>
                               )}
                             </div>
-                            <Badge variant="outline" className="flex items-center gap-1">
+                            <Badge
+                              variant="outline"
+                              className="flex items-center gap-1"
+                            >
                               <ShieldCheck className="w-4 h-4" />
                               Confirmed
                             </Badge>
@@ -586,8 +669,8 @@ const CheckIn = () => {
                     );
                   })()}
                   <p className="text-xs text-muted-foreground">
-                    Have a room preference? Mention it under other requests and the team will do
-                    their best to accommodate it.
+                    Have a room preference? Mention it under other requests and
+                    the team will do their best to accommodate it.
                   </p>
                 </CardContent>
               </Card>
@@ -601,19 +684,27 @@ const CheckIn = () => {
                     Guest Details
                   </CardTitle>
                   <CardDescription>
-                    Capture the identity proof for each guest staying under this reservation.
+                    Capture the identity proof for each guest staying under this
+                    reservation.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-5">
                   {fields.map((field, index) => {
                     const docType = watch(`guests.${index}.documentType`);
-                    const docImage = watch(`guests.${index}.documentImageDataUrl`);
+                    const docImage = watch(
+                      `guests.${index}.documentImageDataUrl`,
+                    );
                     const docTypeConfig =
-                      DOCUMENT_TYPES.find((item) => item.value === docType) ?? DOCUMENT_TYPES[0];
-                    const guestErrors = (errors.guests?.[index] ?? {}) as Record<string, any>;
+                      DOCUMENT_TYPES.find((item) => item.value === docType) ??
+                      DOCUMENT_TYPES[0];
+                    const guestErrors = (errors.guests?.[index] ??
+                      {}) as Record<string, any>;
 
                     return (
-                      <div key={field.id} className="rounded-lg border bg-card/60 p-4 space-y-4">
+                      <div
+                        key={field.id}
+                        className="rounded-lg border bg-card/60 p-4 space-y-4"
+                      >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2 text-sm font-semibold">
                             <User className="w-4 h-4" />
@@ -634,17 +725,24 @@ const CheckIn = () => {
                         </div>
                         <div className="grid gap-4 md:grid-cols-3">
                           <div className="space-y-2">
-                            <Label htmlFor={`guest-name-${index}`}>Full Name</Label>
+                            <Label htmlFor={`guest-name-${index}`}>
+                              Full Name
+                            </Label>
                             <Input
                               id={`guest-name-${index}`}
                               placeholder="Enter guest name"
                               autoComplete="name"
-                              {...register(`guests.${index}.fullName` as const, {
-                                required: "Guest name is required",
-                              })}
+                              {...register(
+                                `guests.${index}.fullName` as const,
+                                {
+                                  required: "Guest name is required",
+                                },
+                              )}
                             />
                             {guestErrors?.fullName?.message && (
-                              <p className="text-xs text-destructive">{guestErrors.fullName.message}</p>
+                              <p className="text-xs text-destructive">
+                                {guestErrors.fullName.message}
+                              </p>
                             )}
                           </div>
                           <div className="space-y-2">
@@ -652,11 +750,15 @@ const CheckIn = () => {
                             <Select
                               value={docType ?? ""}
                               onValueChange={(value) =>
-                                setValue(`guests.${index}.documentType`, value, {
-                                  shouldDirty: true,
-                                  shouldTouch: true,
-                                  shouldValidate: true,
-                                })
+                                setValue(
+                                  `guests.${index}.documentType`,
+                                  value,
+                                  {
+                                    shouldDirty: true,
+                                    shouldTouch: true,
+                                    shouldValidate: true,
+                                  },
+                                )
                               }
                             >
                               <SelectTrigger>
@@ -664,7 +766,10 @@ const CheckIn = () => {
                               </SelectTrigger>
                               <SelectContent>
                                 {DOCUMENT_TYPES.map((type) => (
-                                  <SelectItem key={type.value} value={type.value}>
+                                  <SelectItem
+                                    key={type.value}
+                                    value={type.value}
+                                  >
                                     {type.label}
                                   </SelectItem>
                                 ))}
@@ -672,26 +777,38 @@ const CheckIn = () => {
                             </Select>
                             <input
                               type="hidden"
-                              {...register(`guests.${index}.documentType` as const, {
-                                required: "Document type is required",
-                              })}
+                              {...register(
+                                `guests.${index}.documentType` as const,
+                                {
+                                  required: "Document type is required",
+                                },
+                              )}
                             />
                             {guestErrors?.documentType?.message && (
-                              <p className="text-xs text-destructive">{guestErrors.documentType.message}</p>
+                              <p className="text-xs text-destructive">
+                                {guestErrors.documentType.message}
+                              </p>
                             )}
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor={`guest-doc-${index}`}>Document Number</Label>
+                            <Label htmlFor={`guest-doc-${index}`}>
+                              Document Number
+                            </Label>
                             <Input
                               id={`guest-doc-${index}`}
                               placeholder={docTypeConfig.placeholder}
                               autoComplete="off"
-                              {...register(`guests.${index}.documentNumber` as const, {
-                                required: "Document number is required",
-                              })}
+                              {...register(
+                                `guests.${index}.documentNumber` as const,
+                                {
+                                  required: "Document number is required",
+                                },
+                              )}
                             />
                             {guestErrors?.documentNumber?.message && (
-                              <p className="text-xs text-destructive">{guestErrors.documentNumber.message}</p>
+                              <p className="text-xs text-destructive">
+                                {guestErrors.documentNumber.message}
+                              </p>
                             )}
                           </div>
                         </div>
@@ -702,7 +819,12 @@ const CheckIn = () => {
                             <input
                               type="file"
                               accept="image/*"
-                              onChange={(event) => handleGuestIdUpload(index, event.target.files?.[0])}
+                              onChange={(event) =>
+                                handleGuestIdUpload(
+                                  index,
+                                  event.target.files?.[0],
+                                )
+                              }
                               className="text-sm"
                             />
                             {docImage ? (
@@ -719,9 +841,12 @@ const CheckIn = () => {
                           </div>
                           <input
                             type="hidden"
-                            {...register(`guests.${index}.documentImageDataUrl` as const, {
-                              required: "Identity proof image is required",
-                            })}
+                            {...register(
+                              `guests.${index}.documentImageDataUrl` as const,
+                              {
+                                required: "Identity proof image is required",
+                              },
+                            )}
                           />
                           {guestErrors?.documentImageDataUrl?.message && (
                             <p className="text-xs text-destructive">
@@ -736,7 +861,8 @@ const CheckIn = () => {
                                 className="h-16 w-16 object-cover rounded"
                               />
                               <p className="text-xs text-muted-foreground">
-                                Preview of the uploaded document. Ensure details are legible.
+                                Preview of the uploaded document. Ensure details
+                                are legible.
                               </p>
                             </div>
                           )}
@@ -778,20 +904,24 @@ const CheckIn = () => {
                     Stay Preferences
                   </CardTitle>
                   <CardDescription>
-                    Share the expected arrival and any special assistance requests ahead of time.
+                    Share the expected arrival and any special assistance
+                    requests ahead of time.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="expectedArrivalTime">Expected Arrival</Label>
+                      <Label htmlFor="expectedArrivalTime">
+                        Expected Arrival
+                      </Label>
                       <Input
                         id="expectedArrivalTime"
                         type="datetime-local"
                         {...register("expectedArrivalTime")}
                       />
                       <p className="text-xs text-muted-foreground">
-                        Helps the front desk prepare the room and welcome amenities.
+                        Helps the front desk prepare the room and welcome
+                        amenities.
                       </p>
                     </div>
                     <div className="space-y-2">
@@ -799,7 +929,11 @@ const CheckIn = () => {
                         Special Assistance Needed?
                         <Switch
                           checked={needsAssistance}
-                          onCheckedChange={(checked) => setValue("needsSpecialAssistance", checked, { shouldDirty: true })}
+                          onCheckedChange={(checked) =>
+                            setValue("needsSpecialAssistance", checked, {
+                              shouldDirty: true,
+                            })
+                          }
                         />
                       </Label>
                       <Textarea
@@ -827,16 +961,18 @@ const CheckIn = () => {
                     Verification & Confirmation
                   </CardTitle>
                   <CardDescription>
-                    Upload the necessary documents now. Our reception team will capture signatures during in-person check-in.
+                    Upload the necessary documents now. Our reception team will
+                    capture signatures during in-person check-in.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-5">
                   <div className="rounded-lg border bg-muted/30 p-4 flex items-start gap-3 text-sm text-muted-foreground">
                     <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5" />
                     <p>
-                      Once you arrive, our reception team will verify the identity proofs, record the
-                      physical documents, and collect the guest signature before marking the booking
-                      as checked in from their console.
+                      Once you arrive, our reception team will verify the
+                      identity proofs, record the physical documents, and
+                      collect the guest signature before marking the booking as
+                      checked in from their console.
                     </p>
                   </div>
                 </CardContent>
@@ -847,7 +983,12 @@ const CheckIn = () => {
                   <ShieldCheck className="w-4 h-4" />
                   Ensure all guest details are verified before final submission.
                 </div>
-                <Button type="submit" size="lg" className="sm:w-auto" disabled={submitLoading}>
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="sm:w-auto"
+                  disabled={submitLoading}
+                >
                   {submitLoading ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
